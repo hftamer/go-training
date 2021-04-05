@@ -30,8 +30,8 @@ Your application should be able to:
 
 Additionally, your program should have tests that can be run (and pass!) with `go test`.
 
-Upon completion of the project, a code review session will be scheduled to review the quality of your work and provide
-constructive feedback to use in your HelloFresh Go coding.
+Upon completion of the project, a code review session will be scheduled to review the quality of your final project,
+review your answers to the `QUESTIONS.md`, and provide constructive feedback to use in your HelloFresh Go coding.
 
 ### Usage
 
