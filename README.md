@@ -39,6 +39,13 @@ Simply run the main program: `go run pmgr.go`.
 
 To run tests: `go test ./pmgr`
 
+### Extra material
+Several presentations from the internal HF lectures given by Diego in 2020:
+- [Introduction to Go, W1](https://drive.google.com/file/d/1ZhAhTBWsLB_ElgrRJiS80o6OSJtX-5mM/view)
+- [Go is a little different, W2](https://drive.google.com/file/d/1_BdQldvtZ3UAe_pFxgeQ-OylWm1uw-oa/view)
+- [Multiple things at the time, W3](https://drive.google.com/file/d/10sjjGZ5kIKLEhT1HN-q4xUrsEOMqLyEC/view)
+- [Don't forget the tests, W4](https://drive.google.com/file/d/1uhC3V9tJS2l4Nu3V39DauRStwY8WcmMb/view)
+
 ### Contributing
 
 If you've found an issue, please notifty me and create a PR to fix it if you wish. I'll review it and merge it if it is ready.
