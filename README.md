@@ -3,6 +3,9 @@
 This is a training course for the `Go` programming language designed to onboard backend engineers to the re-engagement
 team.
 
+### Introduction
+This example project follows the [golang-standards project layout](https://github.com/golang-standards/project-layout). As such, `main` files are under the `/cmd` module, code meant for sharing is under `/pkg` and, private application code will be under `/internal`.
+
 ### Getting Started
 
 1. [Setup Go](https://golang.org/doc/tutorial/getting-started#install).
@@ -32,12 +35,6 @@ Additionally, your program should have tests that can be run (and pass!) with `g
 
 Upon completion of the project, a code review session will be scheduled to review the quality of your final project,
 review your answers to the `QUESTIONS.md`, and provide constructive feedback to use in your HelloFresh Go coding.
-
-### Usage
-
-Simply run the main program: `go run ./cmd/pmgr`.
-
-To run tests: `go test ./pmgr`
 
 ### Extra material
 Several presentations from the internal HF lectures given by Diego in 2020:
