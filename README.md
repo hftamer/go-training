@@ -10,8 +10,8 @@ team.
 3. Email US Help Desk for a GoLand license key. If necessary, list me as your manager for approval in the email.
 4. Fork this repository and clone it locally on your machine. Open the repo in GoLand.
 5. Make sure you're able to run `pmgr.go` on your machine.
-5. Go through and complete the [Go Tutorial](https://golang.org/doc/tutorial/getting-started).
-6. While you're going through the tutorial, make sure you stop and answer the questions in `QUESTIONS.md`.
+5. Go through and complete the [Go Tutorial](https://golang.org/doc/tutorial/getting-started) and [A Tour of Go](https://tour.golang.org/welcome/1).
+6. While you're going through the tutorial and the tour, make sure you stop and answer the questions in `QUESTIONS.md`.
 
 ### Final Project
 
