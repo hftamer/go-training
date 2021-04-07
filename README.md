@@ -35,7 +35,7 @@ review your answers to the `QUESTIONS.md`, and provide constructive feedback to 
 
 ### Usage
 
-Simply run the main program: `go run pmgr.go`.
+Simply run the main program: `go run ./cmd/pmgr`.
 
 To run tests: `go test ./pmgr`
 
