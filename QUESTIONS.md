@@ -5,5 +5,5 @@ tutorial](https://golang.org/doc/tutorial/getting-started).
 2. When running `go mod init` on a module you wish to publish, what should the module path be?
 3. What is one reason why you'd need to run `go mod edit` command?
 4. What is the "blank identifier" in Go used for?
-5. How does go know which files are test files to execute with `go test`?
+5. How does Go know which files are test files to execute with `go test`?
 

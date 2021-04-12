@@ -12,7 +12,7 @@ This example project follows the [golang-standards project layout](https://githu
 2. Install [GoLand](https://www.jetbrains.com/go/) on your machine.
 3. Email US Help Desk for a GoLand license key. If necessary, list me as your manager for approval in the email.
 4. Fork this repository and clone it locally on your machine. Open the repo in GoLand.
-5. Make sure you're able to run `pmgr.go` on your machine.
+5. Make sure you're able to run `go run cmd/pmgr/main.go` on your machine.
 5. Go through and complete the [Go Tutorial](https://golang.org/doc/tutorial/getting-started) and [A Tour of Go](https://tour.golang.org/welcome/1).
 6. While you're going through the tutorial and the tour, make sure you stop and answer the questions in `QUESTIONS.md`.
 
@@ -30,8 +30,8 @@ Your application should be able to:
     - `./program delete foo` will delete `foo` if it exists.
 3. encrypt the entries using [bcrypt](https://linuxhint.com/golang-crypto-package/)
 4. handle error conditions gracefully.
-
-Additionally, your program should have tests that can be run (and pass!) with `go test`.
+5. have tests that can be run (and pass!) with `go test`.
+6. build and install using `go build ./cmd/pmgr` and `go install ./cmd/pmgr`.
 
 Upon completion of the project, a code review session will be scheduled to review the quality of your final project,
 review your answers to the `QUESTIONS.md`, and provide constructive feedback to use in your HelloFresh Go coding.
