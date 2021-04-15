@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"os"
@@ -9,37 +10,32 @@ import (
 type userMap map[string]string
 
 func main() {
+
 	//fmt.Println(pmgr.GetQuote())
 	//fmt.Println("Argumenets", os.Args)
 
 	users := userMap{}
 	fmt.Println("user map: ", users)
 
+
 	users.handleUserInput()
 
 	fmt.Println("user map: ", users)
 
-	//myPwd := "shubham"
-	//providedHash, _ := HashPassword(myPwd)
-	//fmt.Println("Password :", myPwd)
-	//fmt.Println("Hash :", providedHash)
-	//
-	//isMatch := CheckPasswordHash(myPwd, providedHash)
-	//fmt.Println("Matched ?:", isMatch)
-
 }
 
-func (u userMap)handleUserInput(){
+func (u userMap) handleUserInput() {
 	switch os.Args[1] {
 	case "add":
-		fmt.Println("Adding")
 		u.addUserEntry(os.Args[2], os.Args[3])
+		u.addUserEntry("test@test.com", "password")
+		u.addUserEntry("user1", "pwd")
 		fmt.Println("user map: ", u)
-		u.updatePassword(os.Args[2], "4567")
-		fmt.Println("user map: ", u)
-		u.deleteUserEntry(os.Args[2])
+		//u.updatePassword(os.Args[2], "4567")
+		//fmt.Println("user map: ", u)
+		//u.deleteUserEntry(os.Args[2])
 	case "update":
-		u.updatePassword("jesse@hellofresh.com", "4567")
+		u.updatePassword("user1", "4567")
 	case "get":
 		fmt.Println("getting")
 	case "delete":
@@ -49,18 +45,53 @@ func (u userMap)handleUserInput(){
 	}
 }
 
-func (u userMap) addUserEntry(username string, password string){
+func (u userMap) addUserEntry(username string, password string) {
+	fmt.Println("*******  Adding ")
 	fmt.Println("Username: ", username)
 	fmt.Println("pwd: ", password)
 	hashedPassword, error := HashPassword(password)
+	fmt.Println("hashed pwd: (leaving out for now) ", hashedPassword)
 	if error != nil {
 		fmt.Println("An Error Occurred")
 		os.Exit(1)
 	}
-	u[username] = hashedPassword
+	u[username] = password
+
+	for key, value := range u {
+		fmt.Println("key", key, "value", value)
+	}
+
+	keyValuePairsAsByteSlice := createKeyValuePairsAsString(u)
+	fmt.Println("Returned value: ", keyValuePairsAsByteSlice)
+	saveTextToFile("userData.txt", keyValuePairsAsByteSlice)
 }
 
-func (u userMap) updatePassword(username string, newPassword string){
+func createKeyValuePairsAsString(m map[string]string) string {
+	//A Buffer is a variable-sized buffer of bytes with Read and Write methods. The zero value for Buffer is an empty buffer ready to use.
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	}
+	fmt.Println("Value of B: ", b)
+	fmt.Println("B as Bytes: ", b.Bytes())
+	return b.String()
+}
+
+func saveTextToFile(filename string, data string) {
+	file, err := os.OpenFile(filename,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer file.Close()
+	keyValuePairs := fmt.Sprintf("%s \n", data)
+	if _, err := file.WriteString(keyValuePairs); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func (u userMap) updatePassword(username string, newPassword string) {
+	fmt.Println("*******  Updating ")
 	fmt.Println("Same Username: ", username)
 	fmt.Println("updated pwd: ", newPassword)
 	newHashedPassword, error := HashPassword(newPassword)
@@ -71,11 +102,10 @@ func (u userMap) updatePassword(username string, newPassword string){
 	u[username] = newHashedPassword
 }
 
-func (u userMap) deleteUserEntry(username string){
+func (u userMap) deleteUserEntry(username string) {
 	fmt.Println("Deleting Username: ", username)
 	delete(u, username)
 }
-
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
