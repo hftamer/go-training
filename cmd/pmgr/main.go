@@ -5,41 +5,34 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"os"
+	"strings"
 )
 
 type userMap map[string]string
 
 func main() {
-
-	//fmt.Println(pmgr.GetQuote())
-	//fmt.Println("Argumenets", os.Args)
-
 	users := userMap{}
 	fmt.Println("user map: ", users)
-
-
-	users.handleUserInput()
-
+	getTextFromFile("userData.txt", users)
 	fmt.Println("user map: ", users)
+
+	handleUserInput(users)
 
 }
 
-func (u userMap) handleUserInput() {
+func handleUserInput(u userMap) {
 	switch os.Args[1] {
 	case "add":
 		u.addUserEntry(os.Args[2], os.Args[3])
-		u.addUserEntry("test@test.com", "password")
-		u.addUserEntry("user1", "pwd")
 		fmt.Println("user map: ", u)
-		//u.updatePassword(os.Args[2], "4567")
-		//fmt.Println("user map: ", u)
-		//u.deleteUserEntry(os.Args[2])
 	case "update":
 		u.updatePassword("user1", "4567")
 	case "get":
 		fmt.Println("getting")
+		getPasswordFromMap(os.Args[2], u)
 	case "delete":
 		fmt.Println("deleting.")
+		u.deleteUserEntry(os.Args[2])
 	default:
 		fmt.Printf("You entered an invalid option")
 	}
@@ -89,6 +82,22 @@ func saveTextToFile(filename string, data string) {
 		fmt.Println(err)
 	}
 }
+
+func getTextFromFile(filename string, u userMap) {
+	byteSlice, _ := os.ReadFile(filename)
+
+	newSlice := strings.Split((string(byteSlice)),"\n")
+
+	for _, value := range newSlice{
+		result := strings.Split(value,"=")
+		u[result[0]]= result[1]
+	}
+}
+
+func getPasswordFromMap(key string, u userMap) {
+	fmt.Println(u[key])
+}
+
 
 func (u userMap) updatePassword(username string, newPassword string) {
 	fmt.Println("*******  Updating ")
