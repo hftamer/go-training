@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"os"
 	"strings"
 )
@@ -45,7 +46,7 @@ func validateCommandLineArguments(expectedLength int) {
 
 func (userData userMap) addUserEntryToFile(username string, password string, filename string) {
 	if userData[username] != "" {
-		fmt.Println("Oops! Looks like that username already exists")
+		log.Fatal("Oops! Looks like that username already exists")
 		os.Exit(1)
 	}
 
@@ -93,10 +94,11 @@ func populateUserMapWithDataFromFile(filename string, u userMap) {
 	}
 }
 
-func (userData userMap) getPasswordFromMap(username string) {
+func (userData userMap) getPasswordFromMap(username string) string {
 	userData.checkForExistingUser(username)
 	fmt.Println(userData[username])
 	fmt.Println("successfully retried password")
+	return userData[username]
 }
 
 func (userData userMap) checkForExistingUser(username string) {
@@ -123,17 +125,18 @@ func (userData userMap) updatePassword(username string, newPassword string, file
 	fmt.Println("successfully updated")
 }
 
-func (userData userMap) deleteUserEntry(username string, fileName string) {
+func (userData userMap) deleteUserEntry(username string, fileName string) string {
 	userData.checkForExistingUser(username)
-
-	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
-
+	clearTextFile(fileName)
 	delete(userData, username)
-
+	saveUserData(fileName, userData)
+	successMessage := "successfully deleted"
+	return successMessage
+}
+func clearTextFile(fileName string){
+	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
 	err := file.Truncate(0)
 	handleFileTruncatingError(err)
-	saveUserData(fileName, userData)
-	fmt.Println("successfully deleted")
 }
 
 func handleFileTruncatingError(e error){
