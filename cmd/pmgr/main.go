@@ -29,7 +29,6 @@ func runCommandLineProgram(userData userMap, fileName string) {
 		validateCommandLineArguments(3)
 		userData.getPasswordFromMap(os.Args[2])
 	case "delete":
-		fmt.Println("deleting.")
 		userData.deleteUserEntry(os.Args[2], fileName)
 	default:
 		fmt.Printf("You entered an invalid option")
@@ -55,6 +54,7 @@ func (userData userMap) addUserEntryToFile(username string, password string, fil
 	fmt.Println("hashed pwd: (leaving out for now) ", hashedPassword)
 	newUserData[username] = password
 	saveUserData(filename, newUserData)
+	fmt.Println("successfully added")
 }
 
 func covertUserDataMapToString(userData userMap) string {
@@ -93,54 +93,54 @@ func populateUserMapWithDataFromFile(filename string, u userMap) {
 	}
 }
 
-func (userData userMap) getPasswordFromMap(key string) {
-	value := userData[key]
+func (userData userMap) getPasswordFromMap(username string) {
+	userData.checkForExistingUser(username)
+	fmt.Println(userData[username])
+	fmt.Println("successfully retried password")
+}
+
+func (userData userMap) checkForExistingUser(username string) {
+	value := userData[username]
 	if value == "" {
 		fmt.Println("Oops! Looks like that username doesn't exist")
 		os.Exit(1)
 	}
-	fmt.Println(userData[key])
 }
 
 func (userData userMap) updatePassword(username string, newPassword string, fileName string) {
-	fmt.Println("*******  Updating ")
-	fmt.Println("Same Username: ", username)
+	userData.checkForExistingUser(username)
+
 	fmt.Println("updated pwd: ", newPassword)
-	newHashedPassword, error := HashPassword(newPassword)
+	newHashedPassword,_ := HashPassword(newPassword)
 	fmt.Println("New hashed password", newHashedPassword)
 
-	fmt.Println("user map coming in: ", userData)
-
-	file, e := os.OpenFile(fileName, os.O_RDWR, 0755)
-	fmt.Println("error? ", e)
-
-	if error != nil {
-		fmt.Println("An Error Occurred")
-		os.Exit(1)
-	}
-
+	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
 	userData[username] = newPassword
 
-	fmt.Println("user map going out: ", userData)
-
 	err := file.Truncate(0)
-	fmt.Println("error: ", err)
-	saveUserData("userData.txt", userData)
+	handleFileTruncatingError(err)
+	saveUserData(fileName, userData)
+	fmt.Println("successfully updated")
 }
 
 func (userData userMap) deleteUserEntry(username string, fileName string) {
-	fmt.Println("user map coming in: ", userData)
-	file, e := os.OpenFile(fileName, os.O_RDWR, 0755)
-	fmt.Println("error? ", e)
+	userData.checkForExistingUser(username)
 
-	fmt.Println("Deleting Username: ", username)
+	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
+
 	delete(userData, username)
-	fmt.Println("user map going out: ", userData)
 
 	err := file.Truncate(0)
-	fmt.Println("error: ", err)
-	saveUserData("userData.txt", userData)
+	handleFileTruncatingError(err)
+	saveUserData(fileName, userData)
+	fmt.Println("successfully deleted")
+}
 
+func handleFileTruncatingError(e error){
+	if e != nil {
+		fmt.Println("An Error Occurred while clearing the file")
+		os.Exit(1)
+	}
 }
 
 func HashPassword(password string) (string, error) {
