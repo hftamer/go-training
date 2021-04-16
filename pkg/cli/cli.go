@@ -20,26 +20,33 @@ func ParseArgs(cmdLine []string) (Args, error) {
 		return Args{}, errors.New("no command provided")
 	}
 
-	switch cmdLine[0] {
+	args := Args{
+		Command: cmdLine[0],
+	}
+	switch args.Command {
 	case "add":
 		if len(cmdLine) != 3 {
 			return Args{}, errors.New("add command needs name and password")
 		}
+		args.Name = cmdLine[1]
+		args.Password = cmdLine[2]
+		break
+	case "get":
+		if len(cmdLine) != 2 {
+			return Args{}, errors.New("get command needs account name")
+		}
+		args.Name = cmdLine[1]
 		break
 	default:
 		return Args{}, errors.New(cmdLine[0] + " is not a recognized command")
 	}
 
 	isHelpPtr := flag.Bool("help", false, "display help")
-
 	flag.Parse()
 
-	return Args {
-		IsHelp:   *isHelpPtr,
-		Command:  cmdLine[0],
-		Name: 	  cmdLine[1],
-		Password: cmdLine[2],
-	}, nil
+	args.IsHelp = *isHelpPtr
+
+	return args, nil
 }
 
 func PrintHelp(exitCode int) {
@@ -87,18 +94,25 @@ func executeCommand(args Args) error {
 		return err
 	}
 
+	// this declares a lambda function that will save the vault no matter what
+	defer func() {
+		if err := vault.Save(vaultPath); err != nil {
+			fmt.Fprint(os.Stderr, err)
+		}
+	}()
+
 	switch args.Command {
 	case "add":
-		err = vault.AddAccount(args.Name, args.Password)
-		break
+		return vault.AddAccount(args.Name, args.Password)
+	case "get":
+		if pwd, e := vault.GetAccount(args.Name); e == nil {
+			fmt.Print(pwd)
+			return nil
+		} else {
+			return e
+		}
 	default:
 		panic("this shouldn't happen if ParseArgs() is implemented correctly")
 	}
-
-	if err != nil {
-		return err
-	}
-
-	return vault.Save(vaultPath)
 }
 

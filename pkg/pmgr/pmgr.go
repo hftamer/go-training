@@ -55,3 +55,11 @@ func (vault *Vault) AddAccount(name string, pwd string) error {
 
 	return nil
 }
+
+func (vault Vault) GetAccount(name string) (string, error) {
+	if acc, found := vault.AccountsByName[name]; found {
+		return acc, nil
+	}
+
+	return "", errors.New("account " + name + " doesn't exist")
+}
