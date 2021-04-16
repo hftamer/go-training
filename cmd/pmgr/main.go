@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/hftamer/go-training/pkg/pmgr"
+	"github.com/hftamer/go-training/pkg/cli"
 )
 
 func main() {
-	fmt.Println(pmgr.GetQuote())
+	cli.Run()
 }
