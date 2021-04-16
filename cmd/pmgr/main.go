@@ -131,6 +131,7 @@ func (userData userMap) deleteUserEntry(username string, fileName string) string
 	delete(userData, username)
 	saveUserData(fileName, userData)
 	successMessage := "successfully deleted"
+	fmt.Println(successMessage)
 	return successMessage
 }
 func clearTextFile(fileName string){
