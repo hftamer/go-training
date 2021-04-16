@@ -24,7 +24,7 @@ func handleUserInput(u userMap) {
 		addUserEntry(os.Args[2], os.Args[3])
 		fmt.Println("user map: ", u)
 	case "update":
-		u.updatePassword(os.Args[2], os.Args[3])
+		u.updatePassword(os.Args[2], os.Args[3], "userData.txt")
 	case "get":
 		fmt.Println("getting")
 		u.getPasswordFromMap(os.Args[2])
@@ -56,7 +56,7 @@ func createKeyValuePairsAsString(m map[string]string) string {
 	//A Buffer is a variable-sized buffer of bytes with Read and Write methods. The zero value for Buffer is an empty buffer ready to use.
 	b := new(bytes.Buffer)
 	for key, value := range m {
-		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+		fmt.Fprintf(b, "%s=%s\n", key, value)
 	}
 	fmt.Println("Value of B: ", b)
 	fmt.Println("B as Bytes: ", b.Bytes())
@@ -82,15 +82,15 @@ func saveUserData(filename string, userInfo userMap) {
 func getTextFromFile(filename string, u userMap) {
 	byteSlice, _ := os.ReadFile(filename)
 
-	newSlice := strings.Split((string(byteSlice)),"\n")
+	newSlice := strings.Split((string(byteSlice)), "\n")
 	fmt.Println("new slice: ", newSlice)
 	fmt.Println("length: ", len(newSlice))
 
-	for _, value := range newSlice{
-		if (value != ""){
-			result := strings.Split(value,"=")
+	for _, value := range newSlice {
+		if value != "" {
+			result := strings.Split(value, "=")
 			fmt.Println("Result: ", result)
-			u[result[0]]= result[1]
+			u[result[0]] = result[1]
 		}
 	}
 }
@@ -99,19 +99,31 @@ func (u userMap) getPasswordFromMap(key string) {
 	fmt.Println(u[key])
 }
 
-
-func (u userMap) updatePassword(username string, newPassword string) {
+func (u userMap) updatePassword(username string, newPassword string, fileName string) {
 	fmt.Println("*******  Updating ")
 	fmt.Println("Same Username: ", username)
 	fmt.Println("updated pwd: ", newPassword)
 	newHashedPassword, error := HashPassword(newPassword)
 	fmt.Println("New hashed password", newHashedPassword)
 
+	fmt.Println("user map coming in: ", u)
+
+	file, e := os.OpenFile(fileName, os.O_RDWR, 0755)
+	fmt.Println("error? ", e)
+
 	if error != nil {
 		fmt.Println("An Error Occurred")
 		os.Exit(1)
 	}
+
+
 	u[username] = newPassword
+
+	fmt.Println("user map going out: ", u)
+
+	err := file.Truncate(0)
+	fmt.Println("error: ", err)
+	saveUserData("userData.txt", u)
 }
 
 func (u userMap) deleteUserEntry(username string, fileName string) {
