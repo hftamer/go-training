@@ -36,6 +36,7 @@ func runCommandLineProgram(userData userMap, fileName string) {
 	}
 }
 
+// *** main functions
 func validateCommandLineArguments(expectedLength int) {
 	if len(os.Args) != expectedLength {
 		errorMessage := fmt.Sprintf("Wrong number of arguments: expected %v, got %v", expectedLength, len(os.Args))
@@ -58,6 +59,40 @@ func (userData userMap) addUserEntryToFile(username string, password string, fil
 	fmt.Println("successfully added")
 }
 
+func (userData userMap) updatePassword(username string, newPassword string, fileName string) {
+	userData.checkForExistingUser(username)
+
+	fmt.Println("updated pwd: ", newPassword)
+	newHashedPassword,_ := HashPassword(newPassword)
+	fmt.Println("New hashed password", newHashedPassword)
+
+	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
+	userData[username] = newPassword
+
+	err := file.Truncate(0)
+	handleFileTruncatingError(err)
+	saveUserData(fileName, userData)
+	fmt.Println("successfully updated")
+}
+
+func (userData userMap) getPasswordFromMap(username string) string {
+	userData.checkForExistingUser(username)
+	fmt.Println(userData[username])
+	fmt.Println("successfully retried password")
+	return userData[username]
+}
+
+func (userData userMap) deleteUserEntry(username string, fileName string) string {
+	userData.checkForExistingUser(username)
+	clearTextFile(fileName)
+	delete(userData, username)
+	saveUserData(fileName, userData)
+	successMessage := "successfully deleted"
+	fmt.Println(successMessage)
+	return successMessage
+}
+
+// **** Helper functions
 func covertUserDataMapToString(userData userMap) string {
 	userDataAsByteSlice := new(bytes.Buffer)
 	for username, password := range userData {
@@ -94,13 +129,6 @@ func populateUserMapWithDataFromFile(filename string, u userMap) {
 	}
 }
 
-func (userData userMap) getPasswordFromMap(username string) string {
-	userData.checkForExistingUser(username)
-	fmt.Println(userData[username])
-	fmt.Println("successfully retried password")
-	return userData[username]
-}
-
 func (userData userMap) checkForExistingUser(username string) {
 	value := userData[username]
 	if value == "" {
@@ -109,31 +137,6 @@ func (userData userMap) checkForExistingUser(username string) {
 	}
 }
 
-func (userData userMap) updatePassword(username string, newPassword string, fileName string) {
-	userData.checkForExistingUser(username)
-
-	fmt.Println("updated pwd: ", newPassword)
-	newHashedPassword,_ := HashPassword(newPassword)
-	fmt.Println("New hashed password", newHashedPassword)
-
-	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
-	userData[username] = newPassword
-
-	err := file.Truncate(0)
-	handleFileTruncatingError(err)
-	saveUserData(fileName, userData)
-	fmt.Println("successfully updated")
-}
-
-func (userData userMap) deleteUserEntry(username string, fileName string) string {
-	userData.checkForExistingUser(username)
-	clearTextFile(fileName)
-	delete(userData, username)
-	saveUserData(fileName, userData)
-	successMessage := "successfully deleted"
-	fmt.Println(successMessage)
-	return successMessage
-}
 func clearTextFile(fileName string){
 	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
 	err := file.Truncate(0)
