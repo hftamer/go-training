@@ -28,7 +28,7 @@ Your application should be able to:
     - `./program get foo` will get `foo`'s password if it exists.
     - `./program update foo newbar` will update `foo`'s password to `newbar`.
     - `./program delete foo` will delete `foo` if it exists.
-3. encrypt the entries using [bcrypt](https://linuxhint.com/golang-crypto-package/)
+3. encrypt/decrypt the entries using [Go's crypto packages](https://www.thepolyglotdeveloper.com/2018/02/encrypt-decrypt-data-golang-application-crypto-packages/)
 4. handle error conditions gracefully.
 5. have tests that can be run (and pass!) with `go test`.
 6. build and install using `go build ./cmd/pmgr` and `go install ./cmd/pmgr`.
