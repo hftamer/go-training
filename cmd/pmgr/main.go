@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -19,6 +20,8 @@ func main() {
 }
 
 func runCommandLineProgram(userData userMap, fileName string) {
+	addHelperFlagText()
+
 	switch os.Args[1] {
 	case "add":
 		validateCommandLineArguments(4)
@@ -37,6 +40,20 @@ func runCommandLineProgram(userData userMap, fileName string) {
 }
 
 // *** main functions
+func addHelperFlagText(){
+	boolArgPtr := flag.Bool("help", false, "Give instructions on how to use the program")
+	flag.Parse()
+
+	if *boolArgPtr {
+		fmt.Println("Welcome to password manager!")
+		fmt.Println("To create a new username and password use: $ go run main.go add {username} {password}")
+		fmt.Println("To retrieve your password use: $ go run main.go get {username}")
+		fmt.Println("To update your password use: $ go run main.go update {username} {newPassword}")
+		fmt.Println("To delete your username and password use: $ go run main.go delete {username}")
+		os.Exit(1)
+	}
+}
+
 func validateCommandLineArguments(expectedLength int) {
 	if len(os.Args) != expectedLength {
 		errorMessage := fmt.Sprintf("Wrong number of arguments: expected %v, got %v", expectedLength, len(os.Args))
@@ -52,7 +69,7 @@ func (userData userMap) addUserEntryToFile(username string, password string, fil
 	}
 
 	newUserData := userMap{}
-	hashedPassword,_ := HashPassword(password)
+	hashedPassword, _ := HashPassword(password)
 	fmt.Println("hashed pwd: (leaving out for now) ", hashedPassword)
 	newUserData[username] = password
 	saveUserData(filename, newUserData)
@@ -63,10 +80,10 @@ func (userData userMap) updatePassword(username string, newPassword string, file
 	userData.checkForExistingUser(username)
 
 	fmt.Println("updated pwd: ", newPassword)
-	newHashedPassword,_ := HashPassword(newPassword)
+	newHashedPassword, _ := HashPassword(newPassword)
 	fmt.Println("New hashed password", newHashedPassword)
 
-	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
+	file, _ := os.OpenFile(fileName, os.O_RDWR, 0755)
 	userData[username] = newPassword
 
 	err := file.Truncate(0)
@@ -137,13 +154,13 @@ func (userData userMap) checkForExistingUser(username string) {
 	}
 }
 
-func clearTextFile(fileName string){
-	file,_ := os.OpenFile(fileName, os.O_RDWR, 0755)
+func clearTextFile(fileName string) {
+	file, _ := os.OpenFile(fileName, os.O_RDWR, 0755)
 	err := file.Truncate(0)
 	handleFileTruncatingError(err)
 }
 
-func handleFileTruncatingError(e error){
+func handleFileTruncatingError(e error) {
 	if e != nil {
 		fmt.Println("An Error Occurred while clearing the file")
 		os.Exit(1)
