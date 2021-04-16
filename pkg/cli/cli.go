@@ -1,22 +1,44 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"github.com/hftamer/go-training/pkg/pmgr"
 	"os"
 )
 
 type Args struct {
-	IsHelp bool
+	IsHelp   bool
+	Command  string
+	Name     string
+	Password string
 }
 
-func ParseArgs() (Args, error) {
+func ParseArgs(cmdLine []string) (Args, error) {
+	if len(cmdLine) < 1 {
+		return Args{}, errors.New("no command provided")
+	}
+
+	switch cmdLine[0] {
+	case "add":
+		if len(cmdLine) != 3 {
+			return Args{}, errors.New("add command needs name and password")
+		}
+		break
+	default:
+		return Args{}, errors.New(cmdLine[0] + " is not a recognized command")
+	}
+
 	isHelpPtr := flag.Bool("help", false, "display help")
 
 	flag.Parse()
 
 	return Args {
-		IsHelp: *isHelpPtr,
+		IsHelp:   *isHelpPtr,
+		Command:  cmdLine[0],
+		Name: 	  cmdLine[1],
+		Password: cmdLine[2],
 	}, nil
 }
 
@@ -34,8 +56,8 @@ func PrintHelp(exitCode int) {
 	os.Exit(exitCode)
 }
 
-func Run() int {
-	args, err := ParseArgs()
+func Run(cmdLine []string) int {
+	args, err := ParseArgs(cmdLine)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
@@ -45,6 +67,38 @@ func Run() int {
 		PrintHelp(0)
 	}
 
+	if err := executeCommand(args); err != nil {
+		fmt.Fprint(os.Stderr, err)
+		return 1
+	}
+
 	return 0
+}
+
+func GetVaultPath() string {
+	return "pmgr-vault.json"
+}
+
+func executeCommand(args Args) error {
+	vaultPath := GetVaultPath()
+
+	vault, err := pmgr.LoadVault(vaultPath)
+	if err != nil {
+		return err
+	}
+
+	switch args.Command {
+	case "add":
+		err = vault.AddAccount(args.Name, args.Password)
+		break
+	default:
+		panic("this shouldn't happen if ParseArgs() is implemented correctly")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return vault.Save(vaultPath)
 }
 
