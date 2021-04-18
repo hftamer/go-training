@@ -95,7 +95,7 @@ func (userData userMap) updatePassword(username string, newPassword string, file
 func (userData userMap) getPasswordFromMap(username string) string {
 	userData.checkForExistingUser(username)
 	fmt.Println(userData[username])
-	fmt.Println("successfully retried password")
+	fmt.Println("successfully retreived password")
 	return userData[username]
 }
 
