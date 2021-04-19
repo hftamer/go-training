@@ -27,7 +27,7 @@ func (cmd addCommand) Execute() error {
 		return err
 	}
 
-	return vault.Save(vaultPath)
+	return vault.Save()
 }
 
 type getCommand struct {
@@ -42,7 +42,7 @@ func (cmd getCommand) Execute() error {
 		return err
 	}
 
-	pwd, err := vault.GetAccount(cmd.name)
+	pwd, err := vault.GetAccountPassword(cmd.name)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (cmd updateCommand) Execute() error {
 		return err
 	}
 
-	return vault.Save(vaultPath)
+	return vault.Save()
 }
 
 type deleteCommand struct {
@@ -90,7 +90,7 @@ func (cmd deleteCommand) Execute() error {
 		return err
 	}
 
-	return vault.Save(vaultPath)
+	return vault.Save()
 }
 
 func NewCommand(args []string) (Command, error) {

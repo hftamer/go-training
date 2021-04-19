@@ -8,6 +8,7 @@ import (
 
 type Vault struct {
 	AccountsByName map[string]string `json:"vault"`
+	path           string
 }
 
 func GetVaultPath() string {
@@ -15,18 +16,19 @@ func GetVaultPath() string {
 }
 
 func LoadVault(path string) (Vault, error) {
+	vault := Vault {
+		AccountsByName: make(map[string]string),
+		path: path,
+	}
+
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		// ReadFile will only error if the file doesn't exist
+		// The file won't exist if this is the first time we are creating the vault
 		// In that case, return a new vault with no error
-		return Vault{
-			AccountsByName: make(map[string]string),
-		}, nil
+		return vault, nil
 	}
 
-	vault := Vault{
-		AccountsByName: make(map[string]string),
-	}
 	if err = json.Unmarshal(file, &vault); err != nil {
 		return Vault{}, err
 	}
@@ -34,13 +36,13 @@ func LoadVault(path string) (Vault, error) {
 	return vault, nil
 }
 
-func (vault Vault) Save(path string) error {
+func (vault Vault) Save() error {
 	data, err := json.MarshalIndent(vault, "", "\t")
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(path, data, 0644)
+	return ioutil.WriteFile(vault.path, data, 0644)
 }
 
 func (vault Vault) IsExistingAccount(name string) bool {
@@ -60,7 +62,7 @@ func (vault *Vault) AddAccount(name string, pwd string) error {
 	return nil
 }
 
-func (vault Vault) GetAccount(name string) (string, error) {
+func (vault Vault) GetAccountPassword(name string) (string, error) {
 	if acc, found := vault.AccountsByName[name]; found {
 		return acc, nil
 	}
