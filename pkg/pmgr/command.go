@@ -73,6 +73,26 @@ func (cmd updateCommand) Execute() error {
 	return vault.Save(vaultPath)
 }
 
+type deleteCommand struct {
+	name string
+}
+
+func (cmd deleteCommand) Execute() error {
+    vaultPath := GetVaultPath()
+
+    vault, err := LoadVault(vaultPath)
+    if err != nil {
+    	return err
+	}
+
+	err = vault.DeleteAccount(cmd.name)
+	if err != nil {
+		return err
+	}
+
+	return vault.Save(vaultPath)
+}
+
 func NewCommand(args []string) (Command, error) {
 	switch cmd := args[0]; cmd {
 	case "add":
@@ -100,6 +120,14 @@ func NewCommand(args []string) (Command, error) {
 		return updateCommand{
 			name: args[1],
 			newPassword: args[2],
+		}, nil
+	case "delete":
+		if len(args) != 2 {
+			return nil, errors.New("delete command needs account name")
+		}
+
+		return deleteCommand{
+			name: args[1],
 		}, nil
 	default:
 		return nil, errors.New(cmd + " is not a recognized command")

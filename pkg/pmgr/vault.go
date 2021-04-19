@@ -76,3 +76,9 @@ func (vault *Vault) UpdateAccount(name string, password string) error {
 		return errors.New("account " + name + " not found")
 	}
 }
+
+func (vault Vault) DeleteAccount(name string) error {
+	delete(vault.AccountsByName, name)
+
+	return nil
+}
