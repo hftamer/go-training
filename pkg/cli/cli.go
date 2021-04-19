@@ -10,9 +10,7 @@ import (
 
 type Args struct {
 	IsHelp   bool
-	Command  string
-	Name     string
-	Password string
+	Command  pmgr.Command
 }
 
 func ParseArgs(cmdLine []string) (Args, error) {
@@ -20,33 +18,18 @@ func ParseArgs(cmdLine []string) (Args, error) {
 		return Args{}, errors.New("no command provided")
 	}
 
-	args := Args{
-		Command: cmdLine[0],
-	}
-	switch args.Command {
-	case "add":
-		if len(cmdLine) != 3 {
-			return Args{}, errors.New("add command needs name and password")
-		}
-		args.Name = cmdLine[1]
-		args.Password = cmdLine[2]
-		break
-	case "get":
-		if len(cmdLine) != 2 {
-			return Args{}, errors.New("get command needs account name")
-		}
-		args.Name = cmdLine[1]
-		break
-	default:
-		return Args{}, errors.New(cmdLine[0] + " is not a recognized command")
+	cmd, err := pmgr.NewCommand(cmdLine)
+	if err != nil {
+		return Args{}, err
 	}
 
 	isHelpPtr := flag.Bool("help", false, "display help")
 	flag.Parse()
 
-	args.IsHelp = *isHelpPtr
-
-	return args, nil
+	return Args {
+		IsHelp: *isHelpPtr,
+		Command: cmd,
+	}, nil
 }
 
 func PrintHelp(exitCode int) {
@@ -74,45 +57,10 @@ func Run(cmdLine []string) int {
 		PrintHelp(0)
 	}
 
-	if err := executeCommand(args); err != nil {
+	if err := args.Command.Execute(); err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
 
 	return 0
 }
-
-func GetVaultPath() string {
-	return "pmgr-vault.json"
-}
-
-func executeCommand(args Args) error {
-	vaultPath := GetVaultPath()
-
-	vault, err := pmgr.LoadVault(vaultPath)
-	if err != nil {
-		return err
-	}
-
-	// this declares a lambda function that will save the vault no matter what
-	defer func() {
-		if err := vault.Save(vaultPath); err != nil {
-			fmt.Fprint(os.Stderr, err)
-		}
-	}()
-
-	switch args.Command {
-	case "add":
-		return vault.AddAccount(args.Name, args.Password)
-	case "get":
-		if pwd, e := vault.GetAccount(args.Name); e == nil {
-			fmt.Print(pwd)
-			return nil
-		} else {
-			return e
-		}
-	default:
-		panic("this shouldn't happen if ParseArgs() is implemented correctly")
-	}
-}
-

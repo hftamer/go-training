@@ -10,6 +10,10 @@ type Vault struct {
 	AccountsByName map[string]string `json:"vault"`
 }
 
+func GetVaultPath() string {
+	return "pmgr-vault.json"
+}
+
 func LoadVault(path string) (Vault, error) {
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
