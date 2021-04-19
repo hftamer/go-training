@@ -67,3 +67,12 @@ func (vault Vault) GetAccount(name string) (string, error) {
 
 	return "", errors.New("account " + name + " doesn't exist")
 }
+
+func (vault *Vault) UpdateAccount(name string, password string) error {
+	if _, found := vault.AccountsByName[name]; found {
+		vault.AccountsByName[name] = password
+		return nil
+	} else {
+		return errors.New("account " + name + " not found")
+	}
+}

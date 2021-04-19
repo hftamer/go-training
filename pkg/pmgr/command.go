@@ -52,6 +52,27 @@ func (cmd getCommand) Execute() error {
 	return nil
 }
 
+type updateCommand struct {
+	name        string
+	newPassword string
+}
+
+func (cmd updateCommand) Execute() error {
+	vaultPath := GetVaultPath()
+
+	vault, err := LoadVault(vaultPath)
+	if err != nil {
+		return err
+	}
+
+	err = vault.UpdateAccount(cmd.name, cmd.newPassword)
+	if err != nil {
+		return err
+	}
+
+	return vault.Save(vaultPath)
+}
+
 func NewCommand(args []string) (Command, error) {
 	switch cmd := args[0]; cmd {
 	case "add":
@@ -70,6 +91,15 @@ func NewCommand(args []string) (Command, error) {
 
 		return getCommand{
 			name: args[1],
+		}, nil
+	case "update":
+		if len(args) != 3 {
+			return nil, errors.New("update command needs name and new password")
+		}
+
+		return updateCommand{
+			name: args[1],
+			newPassword: args[2],
 		}, nil
 	default:
 		return nil, errors.New(cmd + " is not a recognized command")
