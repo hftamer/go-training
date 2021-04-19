@@ -12,7 +12,7 @@ type Vault struct {
 }
 
 func GetVaultPath() string {
-	return "pmgr-vault.json"
+	return "test-vault.json"
 }
 
 func LoadVault(path string) (Vault, error) {
