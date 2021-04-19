@@ -2,36 +2,52 @@ package main
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
+	"io"
 	"log"
 	"os"
 	"strings"
 )
 
-type userMap map[string]string
+type userMap map[string][]byte
+type Account struct {
+	username string `json:"name"`
+	password string `json:"password"`
+}
+type Vault struct {
+	Accounts []Account
+}
 
 func main() {
 	userData := userMap{}
+	mainVault := Vault{}
+
+	fmt.Println("main vault: ", mainVault)
 	filename := "userData.txt"
+	hashedPassphrase := createHash("p@S$w0rd")
 	populateUserMapWithDataFromFile(filename, userData)
-	runCommandLineProgram(userData, filename)
+	runCommandLineProgram(userData, filename, hashedPassphrase, mainVault)
 }
 
-func runCommandLineProgram(userData userMap, fileName string) {
+func runCommandLineProgram(userData userMap, fileName string, hashedPassphrase string, mainVault Vault) {
 	addHelperFlagText()
 
 	switch os.Args[1] {
 	case "add":
 		validateCommandLineArguments(4)
-		userData.addUserEntryToFile(os.Args[2], os.Args[3], fileName)
+		userData.addUserEntryToFile(os.Args[2], os.Args[3], fileName, hashedPassphrase, mainVault)
 	case "update":
 		validateCommandLineArguments(4)
-		userData.updatePassword(os.Args[2], os.Args[3], fileName)
+		userData.updatePassword(os.Args[2], os.Args[3], fileName, hashedPassphrase)
 	case "get":
 		validateCommandLineArguments(3)
-		userData.getPasswordFromMap(os.Args[2])
+		userData.getPasswordFromMap(os.Args[2], hashedPassphrase)
 	case "delete":
 		userData.deleteUserEntry(os.Args[2], fileName)
 	default:
@@ -62,29 +78,54 @@ func validateCommandLineArguments(expectedLength int) {
 	}
 }
 
-func (userData userMap) addUserEntryToFile(username string, password string, filename string) {
-	if userData[username] != "" {
+func (userData userMap) addUserEntryToFile(username string, password string, filename string, hashedPassphrase string, mainVault Vault) {
+	// create new account entry
+	newAccount := Account{username: username, password: password}
+	fmt.Printf("new account: %+v", newAccount)
+
+	// add new account entry to vault
+	newSlice := append(mainVault.Accounts, newAccount)
+	newSlice = append(mainVault.Accounts, newAccount)
+	fmt.Printf("new slice: %+v", newSlice)
+	fmt.Printf("main vault: %+v", mainVault)
+
+
+
+	if len(userData[username]) != 0 {
 		log.Fatal("Oops! Looks like that username already exists")
 		os.Exit(1)
 	}
 
 	newUserData := userMap{}
-	hashedPassword, _ := HashPassword(password)
-	fmt.Println("hashed pwd: (leaving out for now) ", hashedPassword)
-	newUserData[username] = password
+
+
+	fmt.Println("hashed passphrase: ", hashedPassphrase)
+
+	passwordAsByteSlice := []byte(password)
+	fmt.Println("password as byte slice: ", passwordAsByteSlice)
+
+	encryptedByteSlice :=  encrypt(passwordAsByteSlice, hashedPassphrase)
+
+	fmt.Println("encrypted Byte Slice: ", string(encryptedByteSlice))
+
+	newUserData[username] = encryptedByteSlice
 	saveUserData(filename, newUserData)
 	fmt.Println("successfully added")
 }
 
-func (userData userMap) updatePassword(username string, newPassword string, fileName string) {
+func (userData userMap) updatePassword(username string, newPassword string, fileName string, hashedPassphrase string) {
 	userData.checkForExistingUser(username)
 
 	fmt.Println("updated pwd: ", newPassword)
-	newHashedPassword, _ := HashPassword(newPassword)
-	fmt.Println("New hashed password", newHashedPassword)
+
 
 	file, _ := os.OpenFile(fileName, os.O_RDWR, 0755)
-	userData[username] = newPassword
+
+	passwordAsByteSlice := []byte(newPassword)
+	fmt.Println("password as byte slice: ", passwordAsByteSlice)
+
+	encryptedByteSlice :=  encrypt(passwordAsByteSlice, hashedPassphrase)
+	userData[username] = encryptedByteSlice
 
 	err := file.Truncate(0)
 	handleFileTruncatingError(err)
@@ -92,11 +133,14 @@ func (userData userMap) updatePassword(username string, newPassword string, file
 	fmt.Println("successfully updated")
 }
 
-func (userData userMap) getPasswordFromMap(username string) string {
+func (userData userMap) getPasswordFromMap(username string, hashedPassphrase string) string {
 	userData.checkForExistingUser(username)
-	fmt.Println(userData[username])
+	password := userData[username]
+	decryptedPassword := string(decrypt(password, hashedPassphrase))
+
+	fmt.Println(decryptedPassword)
 	fmt.Println("successfully retreived password")
-	return userData[username]
+	return decryptedPassword
 }
 
 func (userData userMap) deleteUserEntry(username string, fileName string) string {
@@ -113,7 +157,7 @@ func (userData userMap) deleteUserEntry(username string, fileName string) string
 func covertUserDataMapToString(userData userMap) string {
 	userDataAsByteSlice := new(bytes.Buffer)
 	for username, password := range userData {
-		fmt.Fprintf(userDataAsByteSlice, "%s=%s\n", username, password)
+		fmt.Fprintf(userDataAsByteSlice, "%s=%s,", username, password)
 	}
 	return userDataAsByteSlice.String()
 }
@@ -136,19 +180,22 @@ func saveUserData(filename string, userInfo userMap) {
 
 func populateUserMapWithDataFromFile(filename string, u userMap) {
 	userDataAsByteSlice, _ := os.ReadFile(filename)
-	userDataAsStringSlice := strings.Split((string(userDataAsByteSlice)), "\n")
+	userDataAsStringSlice := strings.Split((string(userDataAsByteSlice)), ",")
+	fmt.Println("userData as slice: ", len(userDataAsStringSlice))
 
-	for _, value := range userDataAsStringSlice {
-		if value != "" {
-			result := strings.Split(value, "=")
-			u[result[0]] = result[1]
+	if len(userDataAsStringSlice) != 0 {
+		for _, value := range userDataAsStringSlice {
+			if value != "" {
+				result := strings.Split(value, "=")
+				u[result[0]] = []byte(result[1])
+			}
 		}
 	}
 }
 
 func (userData userMap) checkForExistingUser(username string) {
 	value := userData[username]
-	if value == "" {
+	if len(value) == 0 {
 		fmt.Println("Oops! Looks like that username doesn't exist")
 		os.Exit(1)
 	}
@@ -167,12 +214,41 @@ func handleFileTruncatingError(e error) {
 	}
 }
 
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
+func createHash(key string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(key))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+func encrypt(data []byte, passphrase string) []byte {
+	block, _ := aes.NewCipher([]byte(createHash(passphrase)))
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		panic(err.Error())
+	}
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	return ciphertext
+}
+
+func decrypt(data []byte, passphrase string) []byte {
+	key := []byte(createHash(passphrase))
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	return plaintext
 }
