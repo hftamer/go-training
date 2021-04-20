@@ -128,10 +128,7 @@ func updatePassword(username string, newPassword string, filename string, hashed
 		}
 	}
 
-	if !found {
-		fmt.Println("Oops! Looks like that username doesn't exist")
-		os.Exit(1)
-	}
+	printErrorMessageIfNecessary(found)
 
 
 	fmt.Printf("***** new vault with updated password: %+v\n", newVault)
@@ -154,33 +151,28 @@ func updatePassword(username string, newPassword string, filename string, hashed
 
 
 
-func getPassword(username string, hashedPassphrase string) string {
-
-	newfile, _ := ioutil.ReadFile("test.json")
+func getPassword(username string, hashedPassphrase string) {
+	dataFile, _ := ioutil.ReadFile("test.json")
 	vaultWithExistingData := Vault{}
 
-	_ = json.Unmarshal([]byte(newfile), &vaultWithExistingData)
+	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
 
 	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
-	password := ""
+	found := false
 	for _, v := range vaultWithExistingData.Accounts {
 		if v.Username == username {
-			password = v.Password
-			fmt.Println("password found! Your password is: ", password)
+			fmt.Println("password: ", v.Password)
+			found = true
 		}
 	}
 
-	if password == "" {
-		fmt.Println("Oops! Looks like that username doesn't exist")
-		os.Exit(1)
-	}
+	printErrorMessageIfNecessary(found)
 
 	//decryptedPassword := string(decrypt(password, hashedPassphrase))
 	//
 	//fmt.Println(decryptedPassword)
-	fmt.Println("successfully retreived password")
-	return password
+	fmt.Println("successfully retrieved password")
 }
 
 func deleteUserEntry(username string, filename string) string {
@@ -189,8 +181,6 @@ func deleteUserEntry(username string, filename string) string {
 	newVault := Vault{}
 
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
-
-	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
 	found := false
 	for _, v := range vaultWithExistingData.Accounts {
@@ -202,12 +192,7 @@ func deleteUserEntry(username string, filename string) string {
 		}
 	}
 
-	if !found {
-		fmt.Println("Oops! Looks like that username doesn't exist")
-		os.Exit(1)
-	}
-
-
+	printErrorMessageIfNecessary(found)
 	updateJsonFile(newVault, filename)
 	successMessage := "successfully deleted"
 	fmt.Println(successMessage)
@@ -215,6 +200,12 @@ func deleteUserEntry(username string, filename string) string {
 }
 
 // **** Helper functions
+func printErrorMessageIfNecessary(found bool){
+	if !found {
+		fmt.Println("Oops! Looks like that username doesn't exist")
+		os.Exit(1)
+	}
+}
 func updateJsonFile(newVault Vault, filename string){
 	// update json file with new data
 	out, error := json.MarshalIndent(newVault, "", " ")
