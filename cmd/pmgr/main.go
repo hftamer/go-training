@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -17,31 +18,70 @@ import (
 
 type userMap map[string][]byte
 type Account struct {
-	username string `json:"name"`
-	password string `json:"password"`
+	Username string `json:"name"`
+	Password string `json:"password"`
 }
+
+// vault is a struct that has a slice of type account
 type Vault struct {
-	Accounts []Account
+	Accounts []Account `json:"account"`
 }
 
 func main() {
 	userData := userMap{}
 	mainVault := Vault{}
 
-	fmt.Println("main vault: ", mainVault)
+	newAccount := Account{Username: "hi", Password: "bye"}
+	fmt.Println("new account", newAccount)
+	fmt.Println("vault: ", mainVault)
+
+
+	mainVault.Accounts = append(mainVault.Accounts, newAccount)
+	fmt.Println("vault: ", mainVault)
+	fmt.Printf("vault: %+v", mainVault)
+	fmt.Printf("*** vault: %p\n", mainVault.Accounts)
+
+
+	mainVault.addAccount()
+	mainVault.addAccount()
+
+	fmt.Println("vault: ", mainVault)
+	fmt.Printf("AGAINNNNNvault: %+v", mainVault)
 	filename := "userData.txt"
 	hashedPassphrase := createHash("p@S$w0rd")
 	populateUserMapWithDataFromFile(filename, userData)
-	runCommandLineProgram(userData, filename, hashedPassphrase, mainVault)
+	runCommandLineProgram(userData, filename, hashedPassphrase, &mainVault, mainVault)
+
+	fmt.Println("vault: ", mainVault)
+	fmt.Printf("last one: %+v", mainVault)
+
+	out, error := json.MarshalIndent(mainVault, "", " ")
+	fmt.Println("output:", string(out))
+
+	fmt.Println("errors:", error)
+
+	//err := ioutil.WriteFile("test.json", file, 0644)
+	//fmt.Println("errors:", err)
+
 }
 
-func runCommandLineProgram(userData userMap, fileName string, hashedPassphrase string, mainVault Vault) {
+func (pointerToVault *Vault) addAccount() {
+	newAccount2 := Account{Username: "ciao", Password: "arrivederci"}
+	pointerToVault.Accounts = append(pointerToVault.Accounts, newAccount2)
+	fmt.Println("in change: ", newAccount2)
+	fmt.Printf("in change: %+v", newAccount2)
+	fmt.Printf("*** vault: %p\n", newAccount2)
+}
+
+
+func runCommandLineProgram(userData userMap, fileName string, hashedPassphrase string, pointerToVault *Vault, mainVault Vault) {
 	addHelperFlagText()
 
 	switch os.Args[1] {
 	case "add":
 		validateCommandLineArguments(4)
-		userData.addUserEntryToFile(os.Args[2], os.Args[3], fileName, hashedPassphrase, mainVault)
+		userData.addUserEntryToFile(os.Args[2], os.Args[3], fileName, hashedPassphrase, pointerToVault, mainVault)
+
 	case "update":
 		validateCommandLineArguments(4)
 		userData.updatePassword(os.Args[2], os.Args[3], fileName, hashedPassphrase)
@@ -78,16 +118,21 @@ func validateCommandLineArguments(expectedLength int) {
 	}
 }
 
-func (userData userMap) addUserEntryToFile(username string, password string, filename string, hashedPassphrase string, mainVault Vault) {
+func (userData userMap) addUserEntryToFile(username string, password string, filename string, hashedPassphrase string, pointerToMainVault *Vault, mainVault Vault) {
+
 	// create new account entry
-	newAccount := Account{username: username, password: password}
+	newAccount := Account{Username: username, Password: password}
 	fmt.Printf("new account: %+v", newAccount)
 
 	// add new account entry to vault
-	newSlice := append(mainVault.Accounts, newAccount)
-	newSlice = append(mainVault.Accounts, newAccount)
-	fmt.Printf("new slice: %+v", newSlice)
-	fmt.Printf("main vault: %+v", mainVault)
+	pointerToMainVault.Accounts = append(pointerToMainVault.Accounts, newAccount)
+	pointerToMainVault.Accounts = append((*pointerToMainVault).Accounts, newAccount)
+	fmt.Printf("*** main vault: %+v", pointerToMainVault)
+	fmt.Println("*****")
+	fmt.Printf("***** main vault: %+v", mainVault)
+
+
+
 
 
 
