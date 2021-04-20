@@ -12,9 +12,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
-	"strings"
 )
 
 type userMap map[string][]byte
@@ -32,38 +30,27 @@ func main() {
 	userData := userMap{}
 	mainVault := Vault{}
 
-	filename := "userData.txt"
+	filename := "test.json"
 	hashedPassphrase := createHash("p@S$w0rd")
-	populateUserMapWithDataFromFile(filename, userData)
+
 	runCommandLineProgram(userData, filename, hashedPassphrase, &mainVault, mainVault)
-
-	fmt.Println("vault: ", mainVault)
-	fmt.Printf("vault again: %+v", mainVault)
-
-	out, error := json.MarshalIndent(mainVault, "", " ")
-	fmt.Println("output:", string(out))
-
-	fmt.Println("errors:", error)
-
-	err := ioutil.WriteFile("test.json", out, 0644)
-	fmt.Println("errors:", err)
 }
 
 
-func runCommandLineProgram(userData userMap, fileName string, hashedPassphrase string, pointerToVault *Vault, mainVault Vault) {
+func runCommandLineProgram(userData userMap, fileName string, hashedPassphrase string, pointerToVault *Vault, vault Vault) {
 	addHelperFlagText()
 
 	switch os.Args[1] {
 	case "add":
 		validateCommandLineArguments(4)
-		userData.addUserEntryToFile(os.Args[2], os.Args[3], fileName, hashedPassphrase, pointerToVault, mainVault)
+		userData.addUserEntryToFile(os.Args[2], os.Args[3], fileName)
 
 	case "update":
 		validateCommandLineArguments(4)
 		userData.updatePassword(os.Args[2], os.Args[3], fileName, hashedPassphrase)
 	case "get":
 		validateCommandLineArguments(3)
-		userData.getPasswordFromMap(os.Args[2], hashedPassphrase)
+		userData.getPassword(os.Args[2], hashedPassphrase)
 	case "delete":
 		userData.deleteUserEntry(os.Args[2], fileName)
 	default:
@@ -94,48 +81,74 @@ func validateCommandLineArguments(expectedLength int) {
 	}
 }
 
-func (userData userMap) addUserEntryToFile(username string, password string, filename string, hashedPassphrase string, pointerToMainVault *Vault, mainVault Vault) {
+func (userData userMap) addUserEntryToFile(username string, password string, filename string) {
+
+	dataFile, _ := ioutil.ReadFile(filename)
+	vaultWithExistingData := Vault{}
+
+	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
+
+	for _, v := range vaultWithExistingData.Accounts {
+		if v.Username == username {
+			fmt.Println("Oops! Looks like this account already exists")
+			os.Exit(1)
+		}
+	}
+
+	fmt.Printf("***** new vault in add function: %+v", vaultWithExistingData)
+
 
 	// create new account entry
 	newAccount := Account{Username: username, Password: password}
 	fmt.Printf("new account: %+v", newAccount)
 
-	// add new account entry to vault
-	pointerToMainVault.Accounts = append(pointerToMainVault.Accounts, newAccount)
-	fmt.Printf("*** main vault: %+v", pointerToMainVault)
-	fmt.Println("*****")
-	fmt.Printf("***** main vault: %+v", mainVault)
+	vaultWithExistingData.Accounts = append(vaultWithExistingData.Accounts, newAccount)
 
+	fmt.Println("vault: ", vaultWithExistingData)
+	fmt.Printf("***** vault again: %+v", vaultWithExistingData)
 
-	if len(userData[username]) != 0 {
-		log.Fatal("Oops! Looks like that username already exists")
+	// update json file with new data
+	out, error := json.MarshalIndent(vaultWithExistingData, "", " ")
+	fmt.Println("output:", string(out))
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	error = ioutil.WriteFile(filename, out, 0644)
+	if error != nil {
+		fmt.Println(error)
+	}
+}
+
+func (userData userMap) updatePassword(username string, newPassword string, filename string, hashedPassphrase string) {
+	dataFile, _ := ioutil.ReadFile(filename)
+	vaultWithExistingData := Vault{}
+
+	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
+
+	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
+
+	found := false
+	for _, v := range vaultWithExistingData.Accounts {
+		if v.Username == username {
+			fmt.Println("found", username)
+			found = true
+			v.Password = newPassword
+		}
+	}
+
+	if !found {
+		fmt.Println("Oops! Looks like that username doesn't exist")
 		os.Exit(1)
 	}
 
-	newUserData := userMap{}
 
-
-	fmt.Println("hashed passphrase: ", hashedPassphrase)
-
-	passwordAsByteSlice := []byte(password)
-	fmt.Println("password as byte slice: ", passwordAsByteSlice)
-
-	encryptedByteSlice :=  encrypt(passwordAsByteSlice, hashedPassphrase)
-
-	fmt.Println("encrypted Byte Slice: ", string(encryptedByteSlice))
-
-	newUserData[username] = encryptedByteSlice
-	saveUserData(filename, newUserData)
-	fmt.Println("successfully added")
-}
-
-func (userData userMap) updatePassword(username string, newPassword string, fileName string, hashedPassphrase string) {
-	userData.checkForExistingUser(username)
-
+	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 	fmt.Println("updated pwd: ", newPassword)
 
 
-	file, _ := os.OpenFile(fileName, os.O_RDWR, 0755)
+
 
 	passwordAsByteSlice := []byte(newPassword)
 	fmt.Println("password as byte slice: ", passwordAsByteSlice)
@@ -143,43 +156,89 @@ func (userData userMap) updatePassword(username string, newPassword string, file
 	encryptedByteSlice :=  encrypt(passwordAsByteSlice, hashedPassphrase)
 	userData[username] = encryptedByteSlice
 
-	err := file.Truncate(0)
-	handleFileTruncatingError(err)
-	saveUserData(fileName, userData)
+	//err := file.Truncate(0)
+	//handleFileTruncatingError(err)
+	//saveUserData(password, userData)
 	fmt.Println("successfully updated")
 }
 
-func (userData userMap) getPasswordFromMap(username string, hashedPassphrase string) string {
+
+
+func (userData userMap) getPassword(username string, hashedPassphrase string) string {
 
 	newfile, _ := ioutil.ReadFile("test.json")
-	newVault := Vault{}
+	vaultWithExistingData := Vault{}
 
-	_ = json.Unmarshal([]byte(newfile), &newVault)
+	_ = json.Unmarshal([]byte(newfile), &vaultWithExistingData)
 
-	fmt.Printf("***** new vault: %+v", newVault)
+	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
-
-	for _, v := range newVault.Accounts {
+	password := ""
+	for _, v := range vaultWithExistingData.Accounts {
 		if v.Username == username {
-			fmt.Println("Found")
-			fmt.Println("Password is: ", v.Password)
+			password = v.Password
+			fmt.Println("password found! Your password is: ", password)
 		}
 	}
 
-	userData.checkForExistingUser(username)
-	password := userData[username]
-	decryptedPassword := string(decrypt(password, hashedPassphrase))
+	if password == "" {
+		fmt.Println("Oops! Looks like that username doesn't exist")
+		os.Exit(1)
+	}
 
-	fmt.Println(decryptedPassword)
+	//decryptedPassword := string(decrypt(password, hashedPassphrase))
+	//
+	//fmt.Println(decryptedPassword)
 	fmt.Println("successfully retreived password")
-	return decryptedPassword
+	return password
 }
 
-func (userData userMap) deleteUserEntry(username string, fileName string) string {
-	userData.checkForExistingUser(username)
-	clearTextFile(fileName)
-	delete(userData, username)
-	saveUserData(fileName, userData)
+func (userData userMap) deleteUserEntry(username string, filename string) string {
+
+	dataFile, _ := ioutil.ReadFile(filename)
+	vaultWithExistingData := Vault{}
+	newVault := Vault{}
+
+	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
+
+	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
+
+	found := false
+	for _, v := range vaultWithExistingData.Accounts {
+		if v.Username == username {
+			fmt.Println("found", username)
+			found = true
+		} else {
+			newVault.Accounts = append(newVault.Accounts, Account{Username: v.Username, Password: v.Password})
+		}
+	}
+
+	if !found {
+		fmt.Println("Oops! Looks like that username doesn't exist")
+		os.Exit(1)
+	}
+
+	//vaultWithExistingData.Accounts = append(vaultWithExistingData.Accounts, newAccount)
+
+
+
+	fmt.Printf("***** new vault: %+v\n", newVault)
+
+	// update json file with new data
+	out, error := json.MarshalIndent(newVault, "", " ")
+	fmt.Println("output:", string(out))
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	error = ioutil.WriteFile(filename, out, 0644)
+	if error != nil {
+		fmt.Println(error)
+	}
+
+
+
 	successMessage := "successfully deleted"
 	fmt.Println(successMessage)
 	return successMessage
@@ -210,28 +269,21 @@ func saveUserData(filename string, userInfo userMap) {
 	}
 }
 
-func populateUserMapWithDataFromFile(filename string, u userMap) {
-	userDataAsByteSlice, _ := os.ReadFile(filename)
-	userDataAsStringSlice := strings.Split((string(userDataAsByteSlice)), ",")
-	fmt.Println("userData as slice: ", len(userDataAsStringSlice))
+//func populateUserMapWithDataFromFile(filename string, u userMap) {
+//	userDataAsByteSlice, _ := os.ReadFile(filename)
+//	userDataAsStringSlice := strings.Split((string(userDataAsByteSlice)), ",")
+//	fmt.Println("userData as slice: ", len(userDataAsStringSlice))
+//
+//	if len(userDataAsStringSlice) != 0 {
+//		for _, value := range userDataAsStringSlice {
+//			if value != "" {
+//				result := strings.Split(value, "=")
+//				u[result[0]] = []byte(result[1])
+//			}
+//		}
+//	}
+//}
 
-	if len(userDataAsStringSlice) != 0 {
-		for _, value := range userDataAsStringSlice {
-			if value != "" {
-				result := strings.Split(value, "=")
-				u[result[0]] = []byte(result[1])
-			}
-		}
-	}
-}
-
-func (userData userMap) checkForExistingUser(username string) {
-	value := userData[username]
-	if len(value) == 0 {
-		fmt.Println("Oops! Looks like that username doesn't exist")
-		os.Exit(1)
-	}
-}
 
 func clearTextFile(fileName string) {
 	file, _ := os.OpenFile(fileName, os.O_RDWR, 0755)
