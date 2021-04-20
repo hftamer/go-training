@@ -17,10 +17,9 @@ import (
 type userMap map[string][]byte
 type Account struct {
 	Username string `json:"name"`
-	Password string `json:"password"`
+	Password []byte `json:"password"`
 }
 
-// vault is a struct that has a slice of type account
 type Vault struct {
 	Accounts []Account `json:"account"`
 }
@@ -28,10 +27,8 @@ type Vault struct {
 func main() {
 	filename := "test.json"
 	hashedPassphrase := createHash("p@S$w0rd")
-
 	runCommandLineProgram(filename, hashedPassphrase)
 }
-
 
 func runCommandLineProgram(fileName string, hashedPassphrase string) {
 	addHelperFlagText()
@@ -39,8 +36,7 @@ func runCommandLineProgram(fileName string, hashedPassphrase string) {
 	switch os.Args[1] {
 	case "add":
 		validateCommandLineArguments(4)
-		addUserEntryToFile(os.Args[2], os.Args[3], fileName)
-
+		addUserEntryToFile(os.Args[2], os.Args[3], fileName, hashedPassphrase)
 	case "update":
 		validateCommandLineArguments(4)
 		updatePassword(os.Args[2], os.Args[3], fileName, hashedPassphrase)
@@ -77,7 +73,7 @@ func validateCommandLineArguments(expectedLength int) {
 	}
 }
 
-func addUserEntryToFile(username string, password string, filename string) {
+func addUserEntryToFile(username string, password string, filename string, hashedPassphrase string) {
 	// create new vault with existing data
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
@@ -89,18 +85,11 @@ func addUserEntryToFile(username string, password string, filename string) {
 			os.Exit(1)
 		}
 	}
-
-	fmt.Printf("***** new vault in add function: %+v", vaultWithExistingData)
-
+	encryptedPasswordAsByteSlice := encrypt([]byte(password), hashedPassphrase)
 
 	// create new account entry
-	newAccount := Account{Username: username, Password: password}
-	fmt.Printf("new account: %+v", newAccount)
-
+	newAccount := Account{Username: username, Password: encryptedPasswordAsByteSlice}
 	vaultWithExistingData.Accounts = append(vaultWithExistingData.Accounts, newAccount)
-
-	fmt.Println("vault: ", vaultWithExistingData)
-	fmt.Printf("***** vault again: %+v", vaultWithExistingData)
 
 	// update json file with new data
 	updateJsonFile(vaultWithExistingData, filename)
@@ -110,16 +99,15 @@ func updatePassword(username string, newPassword string, filename string, hashed
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
-	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
 	newVault := Vault{}
 	found := false
+	encryptedPasswordAsByteSlice := encrypt([]byte(newPassword), hashedPassphrase)
 	for _, v := range vaultWithExistingData.Accounts {
 
 		if v.Username == username {
-			fmt.Println("found", username)
 			found = true
-			newVault.Accounts = append(newVault.Accounts, Account{Username: v.Username, Password: newPassword})
+			newVault.Accounts = append(newVault.Accounts, Account{Username: v.Username, Password: encryptedPasswordAsByteSlice})
 		} else {
 			newVault.Accounts = append(newVault.Accounts, Account{Username: v.Username, Password: v.Password})
 		}
@@ -127,46 +115,25 @@ func updatePassword(username string, newPassword string, filename string, hashed
 
 	printErrorMessageIfNecessary(found)
 
-
-	fmt.Printf("***** new vault with updated password: %+v\n", newVault)
-	fmt.Println("updated pwd: ", newPassword)
-
 	// update json file with new data
 	updateJsonFile(newVault, filename)
-
-	passwordAsByteSlice := []byte(newPassword)
-	fmt.Println("password as byte slice: ", passwordAsByteSlice)
-
-	//encryptedByteSlice :=  encrypt(passwordAsByteSlice, hashedPassphrase)
-	//userData[username] = encryptedByteSlice
-
-	//err := file.Truncate(0)
-	//handleFileTruncatingError(err)
-	//saveUserData(password, userData)
 	fmt.Println("successfully updated")
 }
-
-
 
 func getPassword(username string, hashedPassphrase string) {
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile("test.json")
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
-	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
 	found := false
 	for _, v := range vaultWithExistingData.Accounts {
 		if v.Username == username {
-			fmt.Println("password: ", v.Password)
+			fmt.Println("password: ", string(decrypt(v.Password, hashedPassphrase)))
 			found = true
 		}
 	}
 
 	printErrorMessageIfNecessary(found)
-
-	//decryptedPassword := string(decrypt(password, hashedPassphrase))
-	//
-	//fmt.Println(decryptedPassword)
 	fmt.Println("successfully retrieved password")
 }
 
@@ -179,7 +146,6 @@ func deleteUserEntry(username string, filename string) string {
 	found := false
 	for _, v := range vaultWithExistingData.Accounts {
 		if v.Username == username {
-			fmt.Println("found", username)
 			found = true
 		} else {
 			newVault.Accounts = append(newVault.Accounts, Account{Username: v.Username, Password: v.Password})
@@ -203,7 +169,6 @@ func printErrorMessageIfNecessary(found bool){
 func updateJsonFile(newVault Vault, filename string){
 	// update json file with new data
 	out, error := json.MarshalIndent(newVault, "", " ")
-	fmt.Println("output:", string(out))
 
 	if error != nil {
 		fmt.Println(error)
@@ -214,7 +179,6 @@ func updateJsonFile(newVault Vault, filename string){
 		fmt.Println(error)
 	}
 }
-
 
 func createHash(key string) string {
 	hasher := md5.New()
