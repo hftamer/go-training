@@ -18,13 +18,23 @@ func ParseArgs(cmdLine []string) (Args, error) {
 		return Args{}, errors.New("no command provided")
 	}
 
+	isHelpPtr := flag.Bool("help", false, "display help")
+	flag.Parse()
+
+	// we want to parse out any flags first
+	// if *isHelpPtr is true, that means the -help flag was passed
+	// and we should not attempt to parse a command out of the command line
+	if *isHelpPtr {
+		return Args {
+			IsHelp: true,
+			Command: nil,
+		}, nil
+	}
+
 	cmd, err := pmgr.NewCommand(cmdLine)
 	if err != nil {
 		return Args{}, err
 	}
-
-	isHelpPtr := flag.Bool("help", false, "display help")
-	flag.Parse()
 
 	return Args {
 		IsHelp: *isHelpPtr,
