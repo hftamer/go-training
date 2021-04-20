@@ -25,7 +25,7 @@ type Vault struct {
 }
 
 func main() {
-	filename := "test.json"
+	filename := "userData.json"
 	hashedPassphrase := createHash("p@S$w0rd")
 	runCommandLineProgram(filename, hashedPassphrase)
 }
@@ -42,7 +42,7 @@ func runCommandLineProgram(fileName string, hashedPassphrase string) {
 		updatePassword(os.Args[2], os.Args[3], fileName, hashedPassphrase)
 	case "get":
 		validateCommandLineArguments(3)
-		getPassword(os.Args[2], hashedPassphrase)
+		getPassword(os.Args[2], fileName, hashedPassphrase)
 	case "delete":
 		deleteUserEntry(os.Args[2], fileName)
 	default:
@@ -93,6 +93,7 @@ func addUserEntryToFile(username string, password string, filename string, hashe
 
 	// update json file with new data
 	updateJsonFile(vaultWithExistingData, filename)
+	fmt.Println("User added successfully")
 }
 
 func updatePassword(username string, newPassword string, filename string, hashedPassphrase string) {
@@ -120,9 +121,9 @@ func updatePassword(username string, newPassword string, filename string, hashed
 	fmt.Println("successfully updated")
 }
 
-func getPassword(username string, hashedPassphrase string) {
+func getPassword(username string, filename string, hashedPassphrase string) {
 	vaultWithExistingData := Vault{}
-	dataFile, _ := ioutil.ReadFile("test.json")
+	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
 
 	found := false
