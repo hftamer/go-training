@@ -73,7 +73,7 @@ func validateCommandLineArguments(expectedLength int) {
 	}
 }
 
-func addUserEntryToFile(username string, password string, filename string, hashedPassphrase string) {
+func addUserEntryToFile(username string, password string, filename string, hashedPassphrase string) string{
 	// create new vault with existing data
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
@@ -93,10 +93,12 @@ func addUserEntryToFile(username string, password string, filename string, hashe
 
 	// update json file with new data
 	updateJsonFile(vaultWithExistingData, filename)
-	fmt.Println("User added successfully")
+	successMessage := "User added successfully"
+	fmt.Println(successMessage)
+	return successMessage
 }
 
-func updatePassword(username string, newPassword string, filename string, hashedPassphrase string) {
+func updatePassword(username string, newPassword string, filename string, hashedPassphrase string) string{
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
@@ -118,10 +120,12 @@ func updatePassword(username string, newPassword string, filename string, hashed
 
 	// update json file with new data
 	updateJsonFile(newVault, filename)
-	fmt.Println("successfully updated")
+	successMessage := "successfully updated"
+	fmt.Println(successMessage)
+	return successMessage
 }
 
-func getPassword(username string, filename string, hashedPassphrase string) {
+func getPassword(username string, filename string, hashedPassphrase string) string {
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
@@ -135,7 +139,9 @@ func getPassword(username string, filename string, hashedPassphrase string) {
 	}
 
 	printErrorMessageIfNecessary(found)
-	fmt.Println("successfully retrieved password")
+	successMessage := "successfully retrieved password"
+	fmt.Println(successMessage)
+	return successMessage
 }
 
 func deleteUserEntry(username string, filename string) string {
