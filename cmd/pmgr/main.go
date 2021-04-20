@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -31,22 +32,7 @@ func main() {
 	userData := userMap{}
 	mainVault := Vault{}
 
-	newAccount := Account{Username: "hi", Password: "bye"}
-	fmt.Println("new account", newAccount)
-	fmt.Println("vault: ", mainVault)
 
-
-	mainVault.Accounts = append(mainVault.Accounts, newAccount)
-	fmt.Println("vault: ", mainVault)
-	fmt.Printf("vault: %+v", mainVault)
-	fmt.Printf("*** vault: %p\n", mainVault.Accounts)
-
-
-	mainVault.addAccount()
-	mainVault.addAccount()
-
-	fmt.Println("vault: ", mainVault)
-	fmt.Printf("AGAINNNNNvault: %+v", mainVault)
 	filename := "userData.txt"
 	hashedPassphrase := createHash("p@S$w0rd")
 	populateUserMapWithDataFromFile(filename, userData)
@@ -60,17 +46,15 @@ func main() {
 
 	fmt.Println("errors:", error)
 
-	//err := ioutil.WriteFile("test.json", file, 0644)
-	//fmt.Println("errors:", err)
+	err := ioutil.WriteFile("test.json", out, 0644)
+	fmt.Println("errors:", err)
 
-}
+	newfile, _ := ioutil.ReadFile("test.json")
+	newVault := Vault{}
 
-func (pointerToVault *Vault) addAccount() {
-	newAccount2 := Account{Username: "ciao", Password: "arrivederci"}
-	pointerToVault.Accounts = append(pointerToVault.Accounts, newAccount2)
-	fmt.Println("in change: ", newAccount2)
-	fmt.Printf("in change: %+v", newAccount2)
-	fmt.Printf("*** vault: %p\n", newAccount2)
+	_ = json.Unmarshal([]byte(newfile), &newVault)
+
+	fmt.Printf("***** new vault: %+v", newVault)
 }
 
 
