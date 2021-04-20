@@ -51,7 +51,7 @@ func runCommandLineProgram(fileName string, hashedPassphrase string) {
 }
 
 // *** main functions
-func addHelperFlagText(){
+func addHelperFlagText() {
 	boolArgPtr := flag.Bool("help", false, "Give instructions on how to use the program")
 	flag.Parse()
 
@@ -73,7 +73,7 @@ func validateCommandLineArguments(expectedLength int) {
 	}
 }
 
-func addUserEntryToFile(username string, password string, filename string, hashedPassphrase string) string{
+func addUserEntryToFile(username string, password string, filename string, hashedPassphrase string) string {
 	// create new vault with existing data
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
@@ -98,7 +98,7 @@ func addUserEntryToFile(username string, password string, filename string, hashe
 	return successMessage
 }
 
-func updatePassword(username string, newPassword string, filename string, hashedPassphrase string) string{
+func updatePassword(username string, newPassword string, filename string, hashedPassphrase string) string {
 	vaultWithExistingData := Vault{}
 	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
@@ -167,13 +167,13 @@ func deleteUserEntry(username string, filename string) string {
 }
 
 // **** Helper functions
-func printErrorMessageIfNecessary(found bool){
+func printErrorMessageIfNecessary(found bool) {
 	if !found {
 		fmt.Println("Oops! Looks like that username doesn't exist")
 		os.Exit(1)
 	}
 }
-func updateJsonFile(newVault Vault, filename string){
+func updateJsonFile(newVault Vault, filename string) {
 	// update json file with new data
 	out, error := json.MarshalIndent(newVault, "", " ")
 
