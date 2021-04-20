@@ -79,9 +79,8 @@ func validateCommandLineArguments(expectedLength int) {
 
 func addUserEntryToFile(username string, password string, filename string) {
 	// create new vault with existing data
-	dataFile, _ := ioutil.ReadFile(filename)
 	vaultWithExistingData := Vault{}
-
+	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
 
 	for _, v := range vaultWithExistingData.Accounts {
@@ -108,11 +107,9 @@ func addUserEntryToFile(username string, password string, filename string) {
 }
 
 func updatePassword(username string, newPassword string, filename string, hashedPassphrase string) {
-	dataFile, _ := ioutil.ReadFile(filename)
 	vaultWithExistingData := Vault{}
-
+	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
-
 	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
 	newVault := Vault{}
@@ -152,11 +149,9 @@ func updatePassword(username string, newPassword string, filename string, hashed
 
 
 func getPassword(username string, hashedPassphrase string) {
-	dataFile, _ := ioutil.ReadFile("test.json")
 	vaultWithExistingData := Vault{}
-
+	dataFile, _ := ioutil.ReadFile("test.json")
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
-
 	fmt.Printf("***** existing vault: %+v\n", vaultWithExistingData)
 
 	found := false
@@ -176,12 +171,11 @@ func getPassword(username string, hashedPassphrase string) {
 }
 
 func deleteUserEntry(username string, filename string) string {
-	dataFile, _ := ioutil.ReadFile(filename)
 	vaultWithExistingData := Vault{}
-	newVault := Vault{}
-
+	dataFile, _ := ioutil.ReadFile(filename)
 	_ = json.Unmarshal([]byte(dataFile), &vaultWithExistingData)
 
+	newVault := Vault{}
 	found := false
 	for _, v := range vaultWithExistingData.Accounts {
 		if v.Username == username {
