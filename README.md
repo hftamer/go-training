@@ -25,16 +25,19 @@ Your application should be able to:
 1. display a useful help message when the user supplies the `-help` flag. (Look into the `Flag` package). 
 2. take in 4 subarguments: `add`, `update`, `get`, `delete` that will add, update, get, or delete an entry in your password manager.
     - `./program add foo bar` will add an entry for account `foo` with password `bar` if one doesn't exist
-    - `./program get foo` will get `foo`'s password if it exists.
-    - `./program update foo newbar` will update `foo`'s password to `newbar`.
-    - `./program delete foo` will delete `foo` if it exists.
+    - `./program get foo` will retrieve `foo`'s password if it exists and print it to `stdout`
+    - `./program update foo newbar` will update `foo`'s password to `newbar`
+    - `./program delete foo` will delete `foo` if it exists
 3. encrypt/decrypt the entries using [Go's crypto packages](https://www.thepolyglotdeveloper.com/2018/02/encrypt-decrypt-data-golang-application-crypto-packages/)
-4. handle error conditions gracefully.
-5. have tests that can be run (and pass!) with `go test`.
-6. build and install using `go build ./cmd/pmgr` and `go install ./cmd/pmgr`.
+4. handle error conditions gracefully
+5. have tests that can be run (and pass!) with `go test`
+6. build and install using `go build ./cmd/pmgr` and `go install ./cmd/pmgr`
 
 Upon completion of the project, a code review session will be scheduled to review the quality of your final project,
 review your answers to the `QUESTIONS.md`, and provide constructive feedback to use in your HelloFresh Go coding.
+
+One possible final project implementation is available on this repo in a `solution` branch. It is _highly_ 
+encouraged that you complete the final project on your own as much as possible and only use the solution as a guide.
 
 ### Extra material
 Several presentations from the internal HF lectures given by Diego in 2020:
@@ -45,4 +48,5 @@ Several presentations from the internal HF lectures given by Diego in 2020:
 
 ### Contributing
 
-If you've found an issue, please notifty me and create a PR to fix it if you wish. I'll review it and merge it if it is ready.
+If you've found an issue, please notify me and create a PR to fix it if you wish. I'll review it and merge it if it is ready.
+PRs are also welcome to address any enhancements.
