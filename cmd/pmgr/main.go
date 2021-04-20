@@ -32,14 +32,13 @@ func main() {
 	userData := userMap{}
 	mainVault := Vault{}
 
-
 	filename := "userData.txt"
 	hashedPassphrase := createHash("p@S$w0rd")
 	populateUserMapWithDataFromFile(filename, userData)
 	runCommandLineProgram(userData, filename, hashedPassphrase, &mainVault, mainVault)
 
 	fmt.Println("vault: ", mainVault)
-	fmt.Printf("last one: %+v", mainVault)
+	fmt.Printf("vault again: %+v", mainVault)
 
 	out, error := json.MarshalIndent(mainVault, "", " ")
 	fmt.Println("output:", string(out))
@@ -48,13 +47,6 @@ func main() {
 
 	err := ioutil.WriteFile("test.json", out, 0644)
 	fmt.Println("errors:", err)
-
-	newfile, _ := ioutil.ReadFile("test.json")
-	newVault := Vault{}
-
-	_ = json.Unmarshal([]byte(newfile), &newVault)
-
-	fmt.Printf("***** new vault: %+v", newVault)
 }
 
 
@@ -110,14 +102,9 @@ func (userData userMap) addUserEntryToFile(username string, password string, fil
 
 	// add new account entry to vault
 	pointerToMainVault.Accounts = append(pointerToMainVault.Accounts, newAccount)
-	pointerToMainVault.Accounts = append((*pointerToMainVault).Accounts, newAccount)
 	fmt.Printf("*** main vault: %+v", pointerToMainVault)
 	fmt.Println("*****")
 	fmt.Printf("***** main vault: %+v", mainVault)
-
-
-
-
 
 
 	if len(userData[username]) != 0 {
@@ -163,6 +150,22 @@ func (userData userMap) updatePassword(username string, newPassword string, file
 }
 
 func (userData userMap) getPasswordFromMap(username string, hashedPassphrase string) string {
+
+	newfile, _ := ioutil.ReadFile("test.json")
+	newVault := Vault{}
+
+	_ = json.Unmarshal([]byte(newfile), &newVault)
+
+	fmt.Printf("***** new vault: %+v", newVault)
+
+
+	for _, v := range newVault.Accounts {
+		if v.Username == username {
+			fmt.Println("Found")
+			fmt.Println("Password is: ", v.Password)
+		}
+	}
+
 	userData.checkForExistingUser(username)
 	password := userData[username]
 	decryptedPassword := string(decrypt(password, hashedPassphrase))
