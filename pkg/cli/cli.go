@@ -18,8 +18,11 @@ func ParseArgs(cmdLine []string) (Args, error) {
 		return Args{}, errors.New("no command provided")
 	}
 
-	isHelpPtr := flag.Bool("help", false, "display help")
-	flag.Parse()
+	flagSet := flag.NewFlagSet("args", flag.ContinueOnError)
+	isHelpPtr := flagSet.Bool("help", false, "display help")
+	if err := flagSet.Parse(cmdLine); err != nil {
+		return Args{}, err
+	}
 
 	// we want to parse out any flags first
 	// if *isHelpPtr is true, that means the -help flag was passed
