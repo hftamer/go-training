@@ -91,7 +91,7 @@ func (vault *Vault) UpdateAccount(name string, pwd string) error {
 	return vault.addPassword(name, pwd)
 }
 
-func (vault Vault) DeleteAccount(name string) error {
+func (vault *Vault) DeleteAccount(name string) error {
 	delete(vault.AccountsByName, name)
 
 	return nil
