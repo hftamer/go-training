@@ -15,6 +15,7 @@ This example project follows the [golang-standards project layout](https://githu
 5. Make sure you're able to run `go run cmd/pmgr/main.go` on your machine.
 5. Go through and complete the [Go Tutorial](https://golang.org/doc/tutorial/getting-started) and [A Tour of Go](https://tour.golang.org/welcome/1).
 6. While you're going through the tutorial and the tour, make sure you stop and answer the questions in `QUESTIONS.md`.
+7. __OPTIONAL:__ Go through this [Udemy course](https://www.udemy.com/share/101XnUAEMaeFZXTXkJ/) for additional practice / resources before moving on.
 
 ### Final Project
 
