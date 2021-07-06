@@ -2,12 +2,9 @@ package arguments
 
 import (
 	"errors"
-	"os"
 )
 
-func Check() error {
-	args := os.Args[1:]
-
+func Check(args []string) error {
 	if len(args) == 0 {
 		return errors.New("no arguments passed")
 	}

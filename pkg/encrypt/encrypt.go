@@ -12,6 +12,9 @@ import (
 )
 
 func Decrypt(passphrase string, data string) (string, error) {
+	if data == "" {
+		return "", nil
+	}
 	key := []byte(createHash(passphrase))
 	block, err := aes.NewCipher(key)
 	if err != nil {
