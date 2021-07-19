@@ -8,6 +8,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 )
 
@@ -18,18 +19,18 @@ func Decrypt(passphrase string, data string) (string, error) {
 	key := []byte(createHash(passphrase))
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed creating aes block, %s", err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed creating gcm, %s", err)
 	}
 	nonceSize := gcm.NonceSize()
 	dataByte := []byte(data)
 	nonce, ciphertext := dataByte[:nonceSize], dataByte[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed getting plaintext, %s", err)
 	}
 	return string(plaintext), nil
 }

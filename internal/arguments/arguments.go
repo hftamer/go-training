@@ -25,5 +25,9 @@ func Check(args []string) error {
 		return errors.New("invalid number of arguments passed")
 	}
 
+	if args[0] == "printall" {
+		return nil
+	}
+
 	return errors.New("incorrect command passed, should be add, delete, update or get")
 }

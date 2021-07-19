@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -54,7 +55,7 @@ func (v *Vault) loadData() error {
 	// decrypt file content
 	decryptedData, err := encrypt.Decrypt(v.encodingKey, sb.String())
 	if err != nil {
-		return err
+		return fmt.Errorf("file decryption failed with key: %q, on loading, %s", v.encodingKey, err)
 	}
 
 	// decode file contents into json
@@ -69,27 +70,23 @@ func (v *Vault) loadData() error {
 	return nil
 }
 
-func (v *Vault) SaveData() error {
+func (v *Vault) SaveData() {
 	var sb strings.Builder
 	enc := json.NewEncoder(&sb)
 	err := enc.Encode(v.data)
 	if err != nil {
-		return err
+		fmt.Println(fmt.Errorf("can't encode file data into json: %s", err))
 	}
+
 	encryptedJSON, err := encrypt.Encrypt(v.encodingKey, sb.String())
 	if err != nil {
-		return err
+		fmt.Println(fmt.Errorf("can't encrypt new data: %s", err))
 	}
-	f, err := os.OpenFile("secrets", os.O_RDWR|os.O_CREATE, 0755)
+
+	err = ioutil.WriteFile("secrets", []byte(encryptedJSON), 0755)
 	if err != nil {
-		return err
+		fmt.Println(fmt.Errorf("can't write to file: %s", err))
 	}
-	defer f.Close()
-	_, err = fmt.Fprint(f, encryptedJSON)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (v *Vault) Get(key string) (string, error) {
@@ -108,4 +105,26 @@ func (v *Vault) Add(key, value string) error {
 	}
 	v.data[key] = value
 	return nil
+}
+
+func (v *Vault) Update(key, value string) error {
+	_, ok := v.data[key]
+	if !ok {
+		return errors.New("this key doesn't exist")
+	}
+	v.data[key] = value
+	return nil
+}
+
+func (v *Vault) Delete(key string) error {
+	_, ok := v.data[key]
+	if !ok {
+		return errors.New("this key doesn't exist")
+	}
+	delete(v.data, key)
+	return nil
+}
+
+func (v *Vault) PrintAll() {
+	fmt.Println(v.data)
 }

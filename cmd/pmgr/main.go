@@ -21,15 +21,10 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	defer secretsVault.SaveData()
 
 	if args[0] == "add" {
 		err = secretsVault.Add(args[1], args[2])
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(secretsVault.Get(args[1]))
-
-		secretsVault.SaveData()
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -41,5 +36,23 @@ func main() {
 			fmt.Println(err)
 		}
 		fmt.Println(str)
+	}
+
+	if args[0] == "update" {
+		err = secretsVault.Update(args[1], args[2])
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if args[0] == "delete" {
+		err = secretsVault.Delete(args[1])
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if args[0] == "printall" {
+		secretsVault.PrintAll()
 	}
 }
