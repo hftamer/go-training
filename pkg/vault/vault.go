@@ -13,6 +13,7 @@ import (
 )
 
 var PMGR_ENCODING_KEY = "PMGR_ENCODING_KEY"
+var PMGR_SECRETS_FILENAME = "PMGR_SECRETS_FILENAME"
 
 func New() (Vault, error) {
 	encodingKey := os.Getenv(PMGR_ENCODING_KEY)
@@ -41,7 +42,7 @@ type Vault struct {
 
 func (v *Vault) loadData() error {
 	// try to open the secrets file
-	f, err := os.OpenFile("secrets", os.O_RDONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile(os.Getenv(PMGR_SECRETS_FILENAME), os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,7 @@ func (v *Vault) SaveData() {
 		fmt.Println(fmt.Errorf("can't encrypt new data: %s", err))
 	}
 
-	err = ioutil.WriteFile("secrets", []byte(encryptedJSON), 0755)
+	err = ioutil.WriteFile(os.Getenv(PMGR_SECRETS_FILENAME), []byte(encryptedJSON), 0755)
 	if err != nil {
 		fmt.Println(fmt.Errorf("can't write to file: %s", err))
 	}

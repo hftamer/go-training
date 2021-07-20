@@ -1,10 +1,27 @@
 package vault
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testMainWrapper(m))
+}
+
+func testMainWrapper(m *testing.M) int {
+  os.Setenv(PMGR_SECRETS_FILENAME, "test_secrets")
+  defer func(){
+	err := os.Remove(os.Getenv(PMGR_SECRETS_FILENAME))
+    if err != nil {
+        fmt.Println(err)
+    }
+	os.Unsetenv(PMGR_SECRETS_FILENAME)
+  }()
+  return m.Run()
+}
 
 func TestNew(t *testing.T) {
 	tests := []struct {
