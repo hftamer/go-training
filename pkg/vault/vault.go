@@ -12,8 +12,10 @@ import (
 	"github.com/hftamer/go-training/pkg/encrypt"
 )
 
+var PMGR_ENCODING_KEY = "PMGR_ENCODING_KEY"
+
 func New() (Vault, error) {
-	encodingKey := os.Getenv("PMGR_ENCODING_KEY")
+	encodingKey := os.Getenv(PMGR_ENCODING_KEY)
 
 	if encodingKey == "" {
 		return Vault{}, errors.New("no encoding key environment variable set")
@@ -53,19 +55,26 @@ func (v *Vault) loadData() error {
 	}
 
 	// decrypt file content
-	decryptedData, err := encrypt.Decrypt(v.encodingKey, sb.String())
-	if err != nil {
+	decryptedData, decryptionError := encrypt.Decrypt(v.encodingKey, sb.String())
+	if decryptionError != nil {
 		return fmt.Errorf("file decryption failed with key: %q, on loading, %s", v.encodingKey, err)
+	}
+
+	if decryptedData == "" {
+		v.data = make(map[string]string)
+		v.SaveData()
+		return nil
 	}
 
 	// decode file contents into json
 	r := strings.NewReader(decryptedData)
-	decryptedJSON := json.NewDecoder(r)
-	decryptedJSON.Decode(&v.data)
-	// how to deal with the initial empty file?
-	// if err != nil {
-	// 	return err
-	// }
+	jsonDecodeError := json.NewDecoder(r).Decode(&v.data)
+	if jsonDecodeError != nil {
+		if err != nil {
+			return fmt.Errorf("error decoding json: %s - after the decryption error: %s", jsonDecodeError, decryptionError)
+		}
+		return fmt.Errorf("error decoding json: %s", jsonDecodeError)
+	}
 
 	return nil
 }

@@ -27,6 +27,9 @@ func Decrypt(passphrase string, data string) (string, error) {
 	}
 	nonceSize := gcm.NonceSize()
 	dataByte := []byte(data)
+	if len(dataByte) < nonceSize {
+		return data, fmt.Errorf("file is corrupted")
+	}
 	nonce, ciphertext := dataByte[:nonceSize], dataByte[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
